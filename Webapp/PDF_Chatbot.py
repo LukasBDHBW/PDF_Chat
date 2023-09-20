@@ -3,8 +3,8 @@ import replicate
 import os
 from pdfminer.high_level import extract_text
 import pytesseract
-from pdf2image import convert_from_path,convert_from_bytes
-from tqdm import tqdm
+from pdf2image import convert_from_bytes
+
 from io import BytesIO
 
 #PDF Reader Code:
