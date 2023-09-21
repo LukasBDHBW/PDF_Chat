@@ -50,9 +50,8 @@ def generate_llama2_response(prompt_input):
     return output
 
 # Funktion für GPT-Antwort
-def generate_gpt_response(prompt_input):
+def generate_gpt_response():
     start_messages={"role": "system", "content": "You are a helpful assistant."}
-    st.session_state.messages.append({"role": "user", "content": prompt_input})
     if start_messages not in st.session_state.messages:
         st.session_state.messages.insert(0, start_messages)
     response = openai.ChatCompletion.create(
@@ -87,9 +86,10 @@ with st.sidebar:
         open_api = st.secrets['API_TOKEN']['openai_api']
         openai.api_key = open_api
     
-    temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
-    top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
-    max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
+    if selected_model != "GPT-3.5 Turbo":
+        temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
+        top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+        max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
 
     # PDF
     uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
@@ -145,7 +145,7 @@ if st.session_state.messages[-1]["role"] != "assistant":#hier system eintragen f
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             if selected_model == "gpt4" or selected_model =='GPT-3.5 Turbo':
-                response = generate_gpt_response(prompt)
+                response = generate_gpt_response()
             else:
                 response = generate_llama2_response(prompt)                
             placeholder = st.empty()
