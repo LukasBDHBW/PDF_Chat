@@ -5,7 +5,6 @@ from pdfminer.high_level import extract_text
 import pytesseract
 from pdf2image import convert_from_bytes
 import openai
-
 from io import BytesIO
 
 #PDF Reader Code:
