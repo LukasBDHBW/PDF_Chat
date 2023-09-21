@@ -49,23 +49,12 @@ def generate_llama2_response(prompt_input):
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
     return output
 
-# Funktion für GPT-Antwort
-def generate_gpt_response(prompt_input):
-    start_messages={"role": "system", "content": "You are a helpful assistant."}
-    st.session_state.messages.append({"role": "user", "content": prompt_input})
-    if start_messages not in st.session_state.messages:
-        st.session_state.messages.insert(0, start_messages)
-    response = openai.ChatCompletion.create(
-    model=llm,
-    messages=st.session_state.messages)
-    return response["choices"][0]["message"]["content"]
-
 # API Token
 with st.sidebar:
     st.title('📁💬 PDF Chatbot')
-    if 'API_TOKEN' in st.secrets:
+    if 'REPLICATE_API_TOKEN' in st.secrets:
         st.success('API key already provided!', icon='✅')
-        replicate_api = st.secrets['API_TOKEN']['replicate_api_token']
+        replicate_api = st.secrets['REPLICATE_API_TOKEN']['my_api_token']
     else:
         replicate_api = st.text_input('Enter Replicate API token:', type='password')
         if not (replicate_api.startswith('r8_') and len(replicate_api)==40):
@@ -75,17 +64,13 @@ with st.sidebar:
 
     # Midellauswahl
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo'], key='selected_model')
+    selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model')
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
         llm = 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5'
-    elif selected_model == 'Llama2-70B':
+    else:
         llm = 'replicate/llama70b-v2-chat:e951f18578850b652510200860fc4ea62b3b16fac280f83ff32282f87bbd2e48'
-    elif selected_model == 'GPT-3.5 Turbo':
-        llm = 'gpt-3.5-turbo'
-        open_api = st.secrets['API_TOKEN']['openai_api']
-        openai.api_key = open_api
     
     temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
     top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
@@ -115,7 +100,7 @@ with st.sidebar:
 
 
 
-os.environ['API_TOKEN'] = replicate_api
+os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
 # Speichern der LLM-generierten Antworten
 if "messages" not in st.session_state.keys():
@@ -141,13 +126,10 @@ if prompt := st.chat_input(disabled=not replicate_api):
 
 
 # Generieren einer neue Antwort, wenn die letzte Nachricht nicht vom Assistenten stammt
-if st.session_state.messages[-1]["role"] != "assistant":#hier system eintragen falls gpt
+if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            if selected_model == "gpt4" or selected_model =='GPT-3.5 Turbo':
-                response = generate_gpt_response(prompt)
-            else:
-                response = generate_llama2_response(prompt)                
+            response = generate_llama2_response(prompt)
             placeholder = st.empty()
             full_response = ''
             for item in response:
