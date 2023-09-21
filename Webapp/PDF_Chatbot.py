@@ -52,6 +52,7 @@ def generate_llama2_response(prompt_input):
 # Funktion für GPT-Antwort
 def generate_gpt_response():
     start_messages={"role": "system", "content": "You are a helpful assistant."}
+    print(llm)
     if start_messages not in st.session_state.messages:
         st.session_state.messages.insert(0, start_messages)
     response = openai.ChatCompletion.create(
@@ -74,7 +75,7 @@ with st.sidebar:
 
     # Midellauswahl
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo'], key='selected_model')
+    selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo','GPT 4'], key='selected_model')
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
@@ -85,11 +86,16 @@ with st.sidebar:
         llm = 'gpt-3.5-turbo'
         open_api = st.secrets['API_TOKEN']['openai_api']
         openai.api_key = open_api
+    elif selected_model == 'GPT 4':
+        llm = 'gpt-4'
+        open_api = st.secrets['API_TOKEN']['openai_api']
+        openai.api_key = open_api
     
-    if selected_model != "GPT-3.5 Turbo":
-        temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
-        top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
-        max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
+    if selected_model != 'GPT-3.5 Turbo':
+        if selected_model != 'GPT 4':
+            temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
+            top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+            max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
 
     # PDF
     uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
@@ -144,7 +150,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
 if st.session_state.messages[-1]["role"] != "assistant":#hier system eintragen falls gpt
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            if selected_model == "gpt4" or selected_model =='GPT-3.5 Turbo':
+            if selected_model == "GPT 4" or selected_model =='GPT-3.5 Turbo':
                 response = generate_gpt_response()
             else:
                 response = generate_llama2_response(prompt)                
