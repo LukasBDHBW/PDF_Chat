@@ -35,29 +35,7 @@ def extract_text_with_fallback():
 # App Titel
 st.set_page_config(page_title="📁💬 PDF Chatbot")
 
-# Funktion für LLaMA2-Antwort
-def generate_llama2_response(prompt_input):
-    string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
-    for dict_message in st.session_state.messages:
-        if dict_message["role"] == "user":
-            string_dialogue += "User: " + dict_message["content"] + "\n\n"
-        else:
-            string_dialogue += "Assistant: " + dict_message["content"] + "\n\n"
-    output = replicate.run(llm, 
-                           input={"prompt": f"{string_dialogue} {prompt_input} Assistant: ",
-                                  "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
-    return output
 
-# Funktion für GPT-Antwort
-def generate_gpt_response():
-    start_messages={"role": "system", "content": "You are a helpful assistant."}
-    print(llm)
-    if start_messages not in st.session_state.messages:
-        st.session_state.messages.insert(0, start_messages)
-    response = openai.ChatCompletion.create(
-    model=llm,
-    messages=st.session_state.messages)
-    return response["choices"][0]["message"]["content"]
 
 # API Token
 with st.sidebar:
@@ -72,7 +50,8 @@ with st.sidebar:
         else:
             st.success('Proceed to entering your prompt message!', icon='👉')
 
-    # Midellauswahl
+    print(replicate_api)
+    # Modellauswahl
     st.subheader('Models and parameters')
     selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo','GPT 4'], key='selected_model')
     if selected_model == 'Llama2-7B':
@@ -96,6 +75,8 @@ with st.sidebar:
             top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
             max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
 
+    
+
     # PDF
     uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
 
@@ -109,7 +90,7 @@ with st.sidebar:
         elif compexity == 'Technisch':
             complex_text = '\n Summerize in a technical way'
         else:
-            complex_text = "\n Summerize this very short"
+            complex_text = "\n Fasse alles kurz zusammen!"
     
         if st.button('Summerize PDF'):
             prompt = text+complex_text
@@ -118,9 +99,32 @@ with st.sidebar:
         if st.button('Text Anzeigen'):
             st.write(text)
 
+    # Website
+# Funktion für LLaMA2-Antwort
+def generate_llama2_response(prompt_input):
+    string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
+    for dict_message in st.session_state.messages:
+        if dict_message["role"] == "user":
+            string_dialogue += "User: " + dict_message["content"] + "\n\n"
+        else:
+            string_dialogue += "Assistant: " + dict_message["content"] + "\n\n"
+    output = replicate.run(llm, 
+                           input={"prompt": f"{string_dialogue} {prompt_input} Assistant: ",
+                                  "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
+    return output
+
+# Funktion für GPT-Antwort
+def generate_gpt_response():
+    start_messages={"role": "system", "content": "You are a helpful assistant."}
+    if start_messages not in st.session_state.messages:
+        st.session_state.messages.insert(0, start_messages)
+    response = openai.ChatCompletion.create(
+    model=llm,
+    messages=st.session_state.messages)
+    return response["choices"][0]["message"]["content"]   
 
 
-os.environ['API_TOKEN'] = replicate_api
+os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
 # Speichern der LLM-generierten Antworten
 if "messages" not in st.session_state.keys():
