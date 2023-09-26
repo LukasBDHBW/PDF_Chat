@@ -6,6 +6,9 @@ import pytesseract
 from pdf2image import convert_from_bytes
 import openai
 from io import BytesIO
+import requests
+from bs4 import BeautifulSoup
+import re
 
 #PDF Reader Code:
 def extract_text_with_fallback():
@@ -29,8 +32,31 @@ def extract_text_with_fallback():
             extracted_texts.append(extracted_text)
     return " ".join(extracted_texts)
 
+#Webscraper Code
+def website(site):
+    response = requests.get(site)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    paragraphs = soup.find_all('p')
+
+    extracted_text = ""
 
 
+    for p in paragraphs:
+        extracted_text += p.text + "\n"
+    return extracted_text
+
+def dropdown_complexity():
+    compexity = st.sidebar.selectbox('Zusammenfassung Komplexität', ['Wirtschaftlich', 'Technisch', 'Stark zusammengefasst','Stichpunkte'], key='compexity')
+    if compexity == 'Wirtschaftlich':
+        complex_text= 'a\n Summerize for a economic person'
+    elif compexity == 'Technisch':
+        complex_text = '\n Summerize in a technical way'
+    elif compexity == 'Stichpunkte':
+        complex_text = '\n Fasse alles kurz auf deutsch in Stichpunkten zusammen!'
+    else:
+        complex_text = "\n Fasse alles kurz auf deutsch zusammen!"
+    return complex_text
 
 # App Titel
 st.set_page_config(page_title="📁💬 PDF Chatbot")
@@ -84,15 +110,9 @@ with st.sidebar:
         text = extract_text_with_fallback()
         st.write("File uploaded successfully!")
 
-        compexity = st.sidebar.selectbox('Zusammenfassung Komplexität', ['Wirtschaftlich', 'Technisch', 'Stark zusammengefasst'], key='compexity')
-        if compexity == 'Wirtschaftlich':
-            complex_text= 'a\n Summerize for a economic person'
-        elif compexity == 'Technisch':
-            complex_text = '\n Summerize in a technical way'
-        else:
-            complex_text = "\n Fasse alles kurz zusammen!"
+        complex_text = dropdown_complexity()
     
-        if st.button('Summerize PDF'):
+        if st.button('Zusammenfassen'):
             prompt = text+complex_text
             st.session_state.messages.append({"role": "user", "content": prompt})
         
@@ -100,6 +120,24 @@ with st.sidebar:
             st.write(text)
 
     # Website
+    web_input = st.text_input('Geben Sie hier eine Webseite ein:', '')
+    url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+
+    if web_input:
+        url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+        if url_pattern.fullmatch(web_input):
+            web_text = website(web_input)
+            complex_text = dropdown_complexity()
+            if st.button('Zusammenfassen'):
+                prompt = web_text+complex_text
+                st.session_state.messages.append({"role": "user", "content": prompt})
+            
+            if st.button('Text Anzeigen'):
+                st.write(web_text)
+        else:
+            st.write('Bitte valide Internetadresse eingeben!')
+
+
 # Funktion für LLaMA2-Antwort
 def generate_llama2_response(prompt_input):
     string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
