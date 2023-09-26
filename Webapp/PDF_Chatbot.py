@@ -76,7 +76,6 @@ with st.sidebar:
         else:
             st.success('Proceed to entering your prompt message!', icon='👉')
 
-    print(replicate_api)
     # Modellauswahl
     st.subheader('Models and parameters')
     selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo','GPT 4'], key='selected_model')
