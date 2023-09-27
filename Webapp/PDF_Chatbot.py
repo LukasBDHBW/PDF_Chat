@@ -26,6 +26,10 @@ def kostenrechner(elapsed_times,res):
         kosten = ((0.03/1000)*anzahl_input)+((0.06/1000)*anzahl_output)
     elif llm == 'GPT-3.5 Turbo - 4k':
         kosten = ((0.0015/1000)*anzahl_input)+((0.002/1000)*anzahl_output)
+    elif llm == 'GPT-3.5 Turbo - 16k':
+        kosten = ((0.003/1000)*anzahl_input)+((0.004/1000)*anzahl_output)
+    elif llm == 'GPT 4 - 32k':
+        kosten = ((0.06/1000)*anzahl_input)+((0.12/1000)*anzahl_output)
     else:        
         kosten = elapsed_times*(3/(60*60))
     return kosten
