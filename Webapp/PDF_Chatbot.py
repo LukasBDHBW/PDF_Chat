@@ -77,7 +77,7 @@ def dropdown_complexity():
     elif compexity == 'Confluence':
         complex_text = '\n Fasse alles kurz auf deutsch für ein gut strukturiertes Informationsblatt zusammen!'
     else:
-        complex_text = "\n Fasse alles kurz auf deutsch zusammen!"
+        complex_text = "\n Fasse alles kurz in deutscher Sprache zusammen!"
     return complex_text
 
 # App Titel
@@ -100,7 +100,7 @@ with st.sidebar:
 
     # Modellauswahl
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo - 4k','GPT 4 - 8k'], key='selected_model')
+    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k'], key='selected_model')
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
@@ -111,8 +111,16 @@ with st.sidebar:
         llm = 'gpt-3.5-turbo'
         open_api = st.secrets['API_TOKEN']['openai_api']
         openai.api_key = open_api
+    elif selected_model == 'GPT-3.5 Turbo - 16k':
+        llm = 'gpt-3.5-turbo-16k'
+        open_api = st.secrets['API_TOKEN']['openai_api']
+        openai.api_key = open_api
     elif selected_model == 'GPT 4 - 8k':
         llm = 'gpt-4'
+        open_api = st.secrets['API_TOKEN']['openai_api']
+        openai.api_key = open_api
+    elif selected_model == 'GPT 4 - 32k':
+        llm = 'gpt-4-32k'
         open_api = st.secrets['API_TOKEN']['openai_api']
         openai.api_key = open_api
     
