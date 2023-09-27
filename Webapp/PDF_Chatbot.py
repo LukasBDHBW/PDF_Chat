@@ -9,6 +9,26 @@ from io import BytesIO
 import requests
 from bs4 import BeautifulSoup
 import re
+import time
+from transformers import GPT2Tokenizer
+
+# Kostenrechner
+tokenizer = GPT2Tokenizer.from_pretrained("gpt2-medium")
+def kostenrechner(elapsed_times,res):
+    input = ''.join(f"{key}{value}" for d in st.session_state.messages for key, value in d.items())
+    input_tokens = tokenizer.tokenize(input)
+    anzahl_input = len(input_tokens)
+    print(anzahl_input)
+    output = res["choices"][0]["message"]["content"]
+    output_tokens = tokenizer.tokenize(output)
+    anzahl_output = len(output_tokens)
+    if llm == 'GPT 4 - 8k':
+        kosten = ((0.03/1000)*anzahl_input)+((0.06/1000)*anzahl_output)
+    elif llm == 'GPT-3.5 Turbo - 4k':
+        kosten = ((0.0015/1000)*anzahl_input)+((0.002/1000)*anzahl_output)
+    else:        
+        kosten = elapsed_times*(3/(60*60))
+    return kosten
 
 #PDF Reader Code:
 def extract_text_with_fallback():
@@ -47,13 +67,15 @@ def website(site):
     return extracted_text
 
 def dropdown_complexity():
-    compexity = st.sidebar.selectbox('Zusammenfassung Komplexität', ['Wirtschaftlich', 'Technisch', 'Stark zusammengefasst','Stichpunkte'], key='compexity')
+    compexity = st.sidebar.selectbox('Zusammenfassung Komplexität', ['Wirtschaftlich', 'Technisch', 'Stark zusammengefasst', 'Confluence','Stichpunkte'], key='compexity')
     if compexity == 'Wirtschaftlich':
         complex_text= 'a\n Summerize for a economic person'
     elif compexity == 'Technisch':
         complex_text = '\n Summerize in a technical way'
     elif compexity == 'Stichpunkte':
         complex_text = '\n Fasse alles kurz auf deutsch in Stichpunkten zusammen!'
+    elif compexity == 'Confluence':
+        complex_text = '\n Fasse alles kurz auf deutsch für ein gut strukturiertes Informationsblatt zusammen!'
     else:
         complex_text = "\n Fasse alles kurz auf deutsch zusammen!"
     return complex_text
@@ -78,24 +100,24 @@ with st.sidebar:
 
     # Modellauswahl
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo','GPT 4'], key='selected_model')
+    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo - 4k','GPT 4 - 8k'], key='selected_model')
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
         llm = 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5'
     elif selected_model == 'Llama2-70B':
         llm = 'replicate/llama70b-v2-chat:e951f18578850b652510200860fc4ea62b3b16fac280f83ff32282f87bbd2e48'
-    elif selected_model == 'GPT-3.5 Turbo':
+    elif selected_model == 'GPT-3.5 Turbo - 4k':
         llm = 'gpt-3.5-turbo'
         open_api = st.secrets['API_TOKEN']['openai_api']
         openai.api_key = open_api
-    elif selected_model == 'GPT 4':
+    elif selected_model == 'GPT 4 - 8k':
         llm = 'gpt-4'
         open_api = st.secrets['API_TOKEN']['openai_api']
         openai.api_key = open_api
     
-    if selected_model != 'GPT-3.5 Turbo':
-        if selected_model != 'GPT 4':
+    if selected_model != 'GPT-3.5 Turbo - 4k':
+        if selected_model != 'GPT 4 - 8k':
             temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
             top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
             max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
@@ -145,9 +167,13 @@ def generate_llama2_response(prompt_input):
             string_dialogue += "User: " + dict_message["content"] + "\n\n"
         else:
             string_dialogue += "Assistant: " + dict_message["content"] + "\n\n"
+    start_time = time.time()
     output = replicate.run(llm, 
                            input={"prompt": f"{string_dialogue} {prompt_input} Assistant: ",
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Ausführungszeit{llm} beträgt: {elapsed_time}!")
     return output
 
 # Funktion für GPT-Antwort
@@ -155,9 +181,14 @@ def generate_gpt_response():
     start_messages={"role": "system", "content": "You are a helpful assistant."}
     if start_messages not in st.session_state.messages:
         st.session_state.messages.insert(0, start_messages)
+    start_time = time.time()
     response = openai.ChatCompletion.create(
     model=llm,
     messages=st.session_state.messages)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    kosten = kostenrechner(elapsed_time, response)
+    print(f"Ausführungszeit{llm} beträgt: {elapsed_time} und die Kosten betragen: ${kosten}!")
     return response["choices"][0]["message"]["content"]   
 
 
@@ -190,7 +221,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
 if st.session_state.messages[-1]["role"] != "assistant":#hier system eintragen falls gpt
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            if selected_model == "GPT 4" or selected_model =='GPT-3.5 Turbo':
+            if selected_model == "GPT 4 - 8k" or selected_model =='GPT-3.5 Turbo - 4k':
                 response = generate_gpt_response()
             else:
                 response = generate_llama2_response(prompt)                
