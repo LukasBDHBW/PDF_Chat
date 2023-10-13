@@ -2,6 +2,8 @@
 
 Willkommen bei diesem Chatbot-Vergleichsprojekt! Hier können Sie direkt die Unterschiede zwischen der LLama 2 Version von GPT-4 und GPT-3.5 Turbo innerhalb einer Chatbot-Seite erfahren und vergleichen. 
 
+![Logo](./Data/Logo_Chatbot.png)
+
 ## Features
 
 - **Chatbotvergleich**: Testen Sie direkt die Antwortqualität und Geschwindigkeit zwischen LLama 2 Version GPT-4 und GPT-3.5 Turbo.
