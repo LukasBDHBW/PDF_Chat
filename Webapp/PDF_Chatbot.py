@@ -10,28 +10,36 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-from transformers import GPT2Tokenizer
+import tiktoken
 
 # Kostenrechner
-tokenizer = GPT2Tokenizer.from_pretrained("gpt2-medium")
+def num_tokens_from_string(string: str, encoding_name: str) -> int:
+    encoding = tiktoken.encoding_for_model(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
 def kostenrechner(elapsed_times,res):
-    input = ''.join(f"{key}{value}" for d in st.session_state.messages for key, value in d.items())
-    input_tokens = tokenizer.tokenize(input)
-    anzahl_input = len(input_tokens)
-    print(anzahl_input)
-    output = res["choices"][0]["message"]["content"]
-    output_tokens = tokenizer.tokenize(output)
-    anzahl_output = len(output_tokens)
-    if llm == 'GPT 4 - 8k':
-        kosten = ((0.03/1000)*anzahl_input)+((0.06/1000)*anzahl_output)
-    elif llm == 'GPT-3.5 Turbo - 4k':
-        kosten = ((0.0015/1000)*anzahl_input)+((0.002/1000)*anzahl_output)
-    elif llm == 'GPT-3.5 Turbo - 16k':
-        kosten = ((0.003/1000)*anzahl_input)+((0.004/1000)*anzahl_output)
-    elif llm == 'GPT 4 - 32k':
-        kosten = ((0.06/1000)*anzahl_input)+((0.12/1000)*anzahl_output)
-    else:        
-        kosten = elapsed_times*(3/(60*60))
+    if 'gpt' in llm:
+        input = ''.join(f"{key}{value}" for d in st.session_state.messages for key, value in d.items())
+        anzahl_input = num_tokens_from_string(input, llm)
+        print(anzahl_input)
+        output = res["choices"][0]["message"]["content"]
+        anzahl_output = num_tokens_from_string(output, llm)
+        if llm == 'gpt-4':
+            kosten = ((0.03/1000)*anzahl_input)+((0.06/1000)*anzahl_output)
+        elif llm == 'gpt-3.5-turbo':
+            kosten = ((0.0015/1000)*anzahl_input)+((0.002/1000)*anzahl_output)
+        elif llm == 'gpt-3.5-turbo-16k':
+            kosten = ((0.003/1000)*anzahl_input)+((0.004/1000)*anzahl_output)
+        else:
+            kosten = ((0.06/1000)*anzahl_input)+((0.12/1000)*anzahl_output)
+    else:
+        if llm == 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea':        
+            kosten = elapsed_times*(0.000725)
+        elif llm == 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5':        
+            kosten = elapsed_times*(0.000725)
+        else:        
+            kosten = elapsed_times*(0.001400)
     return kosten
 
 #PDF Reader Code:
@@ -151,7 +159,7 @@ with st.sidebar:
         
         if st.button('Text Anzeigen'):
             st.write(text)
-
+    
     # Website
     web_input = st.text_input('Geben Sie hier eine Webseite ein:', '')
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -170,6 +178,7 @@ with st.sidebar:
         else:
             st.write('Bitte valide Internetadresse eingeben!')
 
+    
 
 # Funktion für LLaMA2-Antwort
 def generate_llama2_response(prompt_input):
@@ -185,7 +194,10 @@ def generate_llama2_response(prompt_input):
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f"Ausführungszeit{llm} beträgt: {elapsed_time}!")
+    #hier wir um Kosten kalkulieren zu können ein leerer String in die Kostenfunktion mitgegeben , da die Kosten nur von der Ausführungszeit abhängen
+    kosten = kostenrechner(elapsed_time,"")
+    with st.sidebar:
+        st.markdown(f"<b>Ausführungszeit {llm}:</b> {elapsed_time}s<br><b>Kosten</b>:<br>${kosten}", unsafe_allow_html=True)
     return output
 
 # Funktion für GPT-Antwort
@@ -200,8 +212,9 @@ def generate_gpt_response():
     end_time = time.time()
     elapsed_time = end_time - start_time
     kosten = kostenrechner(elapsed_time, response)
-    print(f"Ausführungszeit{llm} beträgt: {elapsed_time} und die Kosten betragen: ${kosten}!")
-    return response["choices"][0]["message"]["content"]   
+    with st.sidebar:
+        st.markdown(f"<b>Ausführungszeit {llm}:</b> {elapsed_time}s<br><b>Kosten</b>:<br>${kosten}", unsafe_allow_html=True)
+    return response["choices"][0]["message"]["content"]
 
 
 os.environ['REPLICATE_API_TOKEN'] = replicate_api
@@ -245,4 +258,3 @@ if st.session_state.messages[-1]["role"] != "assistant":#hier system eintragen f
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
-
