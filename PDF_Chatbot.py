@@ -79,9 +79,9 @@ def website(site):
 def dropdown_complexity():
     compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically', 'Summarized Llama', 'Information page Llama','Bullet points Llama'], key='compexity')
     if compexity == 'Economically':
-        complex_text= 'a\n Instruction: Summerize for a economic person'
+        complex_text= 'a\n Instruction: Summarize for a economic person'
     elif compexity == 'Technically':
-        complex_text = '\n Instruction: Summerize in a technical way'
+        complex_text = '\n Instruction: Summarize in a technical way'
     elif compexity == 'Bullet points Llama':
         complex_text = '\n Instruction: Please transform this content distill the essential ideas into brief bullet points. Prioritize clarity and conciseness, omitting extras.'
     elif compexity == 'Information page Llama':
@@ -152,15 +152,15 @@ with st.sidebar:
 
         complex_text = dropdown_complexity()
     
-        if st.button('Zusammenfassen'):
+        if st.button('Execute'):
             prompt = text+complex_text
             st.session_state.messages.append({"role": "user", "content": prompt})
         
-        if st.button('Text Anzeigen'):
+        if st.button('Show text'):
             st.write(text)
     
     # Website
-    web_input = st.text_input('Geben Sie hier eine Webseite ein:', '')
+    web_input = st.text_input('Enter a website here:', '')
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
     if web_input:
