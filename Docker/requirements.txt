@@ -1,0 +1,10 @@
+
+streamlit
+replicate
+pdfminer.six
+pytesseract
+pdf2image
+openai
+requests
+beautifulsoup4
+tiktoken

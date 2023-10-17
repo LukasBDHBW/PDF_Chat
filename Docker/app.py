@@ -103,7 +103,7 @@ with st.sidebar:
     col1, col2, col3 = st.columns([1,1.5,1])
     with col2:
     
-        st.image('../Data/Logo_trans.png', use_column_width=True)
+        st.image('./Logo_trans.png', use_column_width=True)
     #st.title('📁💬 PDF Chatbot')
     if 'API_TOKEN' in st.secrets:
         st.success('API key already provided!', icon='✅')
