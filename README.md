@@ -3,7 +3,7 @@
 The "PDF Chatbot" project enables users to compare various Large Language Models (Llama 2, GPT-4, and GPT-3.5 Turbo). This chatbot can read PDF documents using OCR and scrape websites to summarize their content, enabling interactive chat about the summarized content.
 
 <p align="center">
-  <img src="./Data/Logo_trans.png" alt="Alternate Text" width="300"/>
+  <img src="./Data/Logo_trans.png" alt="Alternate Text" width="200"/>
 </p>
 
 ## Prerequisites:
