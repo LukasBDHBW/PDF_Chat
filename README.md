@@ -72,6 +72,6 @@ To test the classification abilities of the LLMs:
 
 2. Launch the Jupyter Notebook `Classification.ipynb` in the `Notebook` folder.
 
-3. Download the required datasets from `LINK` and place them in the `Data` folder.
+3. Download the required datasets from [Spam Mails Dataset](https://www.kaggle.com/datasets/venky73/spam-mails-dataset/data), [Topic Labeled News Dataset](https://www.kaggle.com/datasets/kotartemiy/topic-labeled-news-dataset/data) and place them in the `Data` folder.
 
 Enjoy testing and comparing the models! If you have questions or suggestions, feel free to open an issue or submit a pull request.
