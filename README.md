@@ -1,43 +1,77 @@
-# Chatbot-Vergleich: LLama 2 Version GPT-4 vs. GPT-3.5 Turbo
+# PDF Chatbot: Comparing Large Language Models
 
-Willkommen bei diesem Chatbot-Vergleichsprojekt! Hier können Sie direkt die Unterschiede zwischen der LLama 2 Version von GPT-4 und GPT-3.5 Turbo innerhalb einer Chatbot-Seite erfahren und vergleichen. 
+The "PDF Chatbot" project enables users to compare various Large Language Models (Llama 2, GPT-4, and GPT-3.5 Turbo). This chatbot can read PDF documents using OCR and scrape websites to summarize their content, enabling interactive chat about the summarized content.
 
 <p align="center">
   <img src="./Data/Logo_trans.png" alt="Alternate Text" width="300"/>
 </p>
 
+## Prerequisites:
 
-## Features
+- An **OpenAI API Key**. Register on [OpenAI](https://platform.openai.com/account/api-keys) and provide your credit card information to unlock the API key.
+- A **Replicate API Token** for Llama 2. Create a free account on [Replicate](https://replicate.com/) and copy the API token from [this page](https://replicate.com/account/api-tokens).
 
-- **Chatbotvergleich**: Testen Sie direkt die Antwortqualität und Geschwindigkeit zwischen LLama 2 Version GPT-4 und GPT-3.5 Turbo.
-- **PDF Uploader**: Laden Sie Ihre eigenen PDFs hoch und lassen Sie diese von den Chatbots analysieren.
-- **Webscraper**: Lassen Sie Inhalte direkt aus dem Web von den Chatbots extrahieren und analysieren.
+## Local Execution:
 
-## Anweisungen zum Starten
+1. Create a Conda environment using the provided YAML file:
+```
+conda env create -f environment.yml
+```
 
-1. **Konfigurationsdatei erstellen**:
-   Legen Sie eine `secrets.toml` Datei im `.streamlit` Ordner an und füllen Sie sie mit Ihren eigenen API-Keys.
+2. Activate the environment:
+```
+conda activate DTC
+```
 
-   Beispiel:
-   ```toml
-   [gpt]
-   api_key = "YOUR_API_KEY"
-   ```
+3. Navigate to the `PDF_Chatbot.py` folder:
+```
+cd path/to/PDF_Chatbot.py
+```
 
-2. **Abhängigkeiten installieren**:
-   Sie müssen zuerst die in der `requirements.txt` angegebenen Abhängigkeiten installieren. Verwenden Sie dafür folgenden Befehl:
+4. Launch the app:
+```
+streamlit run .\PDF_Chatbot.py
+```
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+5. Open your web browser and input your API keys to use the chatbot. Alternatively, you can create a `secrets.toml` file in the `.streamlit` directory to permanently store your API keys:
 
-3. **App starten**:
-   Zum Starten der App führen Sie den folgenden Befehl in Ihrem Terminal aus:
+```
+[API_TOKEN]
+replicate_api_token = "YOUR_REPLICATE_TOKEN"
+openai_api = "YOUR_OPENAI_KEY"
+```
 
-   ```bash
-   streamlit run [Dateipfad]
-   ```
-   
-   Ersetzen Sie `[Dateipfad]` durch den tatsächlichen Pfad zur Hauptdatei Ihres Projekts, z. B. `app.py`.
+## Docker:
 
-Viel Spaß beim Erkunden und Vergleichen der Chatbots!
+1. Navigate to the Docker folder:
+```
+cd path/to/docker_folder
+```
+
+2. Place the `secrets.toml` file, as described above, in the `.streamlit` directory.
+
+3. Install Docker from [here](https://docs.docker.com/get-docker/).
+
+4. Build the Docker container:
+```
+docker build -t pdf_chatbot .
+```
+
+5. Run the container:
+```
+docker run -p 8080:8080 pdf_chatbot
+```
+
+6. Open your web browser and go to [http://localhost:8080/](http://localhost:8080/).
+
+## Evaluating LLM Classification Capabilities:
+
+To test the classification abilities of the LLMs:
+
+1. Install and activate the Conda environment as described above.
+
+2. Launch the Jupyter Notebook `Classification.ipynb` in the `Notebook` folder.
+
+3. Download the required datasets from `LINK` and place them in the `Data` folder.
+
+Enjoy testing and comparing the models! If you have questions or suggestions, feel free to open an issue or submit a pull request.
