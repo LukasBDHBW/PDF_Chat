@@ -193,13 +193,16 @@ def generate_llama2_response(prompt_input):
     output = replicate.run(llm, 
                            input={"prompt": f"{string_dialogue} {prompt_input} Assistant: ",
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
+    full_response = ''
+    for item in output:
+        full_response += item
     end_time = time.time()
     elapsed_time = end_time - start_time
     #Here we enter an empty string into the cost function in order to be able to calculate costs, since the costs only depend on the execution time
     cost = cost_calculator(elapsed_time,"")
     with st.sidebar:
         st.markdown(f"<b>Execution time {llm}:</b> {elapsed_time}s<br><b>Cost</b>:<br>${cost}", unsafe_allow_html=True)
-    return output
+    return full_response
 
 # GPT response function
 def generate_gpt_response():
@@ -250,10 +253,6 @@ if st.session_state.messages[-1]["role"] != "assistant":
             else:
                 response = generate_llama2_response(prompt)                
             placeholder = st.empty()
-            full_response = ''
-            for item in response:
-                full_response += item
-                placeholder.markdown(full_response)
-            placeholder.markdown(full_response)
-    message = {"role": "assistant", "content": full_response}
+            placeholder.markdown(response)
+    message = {"role": "assistant", "content": response}
     st.session_state.messages.append(message)
