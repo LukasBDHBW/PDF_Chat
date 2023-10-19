@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 import re
 import time
 import tiktoken
-
+from prompts import dropdown_complexity
 
 # Cost Calculator
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
@@ -76,44 +76,6 @@ def website(site):
         extracted_text += p.text + "\n"
     return extracted_text
 
-def dropdown_complexity():
-    if 'gpt-4' in llm:
-        compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically'], key='compexity')
-        if compexity == 'Economically':
-            start_text = 'Content:'
-            last_text= 'a\n Instruction: Summarize for a economic person'
-        elif compexity == 'Technically':
-            start_text = 'Content:'
-            last_text = '\n Instruction: Summarize in a technical way'
-        return start_text, last_text
-    elif 'gpt-3.5' in llm:
-        compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically'], key='compexity')
-        if compexity == 'Economically':
-            start_text = 'Content:'
-            last_text= 'a\n Instruction: Summarize for a economic person'
-        elif compexity == 'Technically':
-            start_text = 'Content:'
-            last_text = '\n Instruction: Summarize in a technical way'
-        return start_text, last_text
-    else:
-        compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically', 'Summarized Llama', 'Information page Llama','Bullet points Llama'], key='compexity')
-        if compexity == 'Economically':
-            start_text = 'Content:'
-            last_text= 'a\n Instruction: Summarize for a economic person'
-        elif compexity == 'Technically':
-            start_text = 'Content:'
-            last_text = '\n Instruction: Summarize in a technical way'
-        elif compexity == 'Bullet points Llama':
-            start_text = 'Content:'
-            last_text = '\n Instruction: Please transform this content distill the essential ideas into brief bullet points. Prioritize clarity and conciseness, omitting extras.'
-        elif compexity == 'Information page Llama':
-            start_text = 'Content:'
-            last_text = '\n Instruction: Please transform this content into a concise summerized information sheet to provide my colleagues with key information about the topic. Ensure the information is accurate and reliable by performing additional checks or validations with the content itself. Structure the information in clear sections and include headings for each topic. Answer long and detailed. And don\'t stop the output until you\'re finished with the information sheet.'
-        elif compexity == 'Summarized Llama':
-            start_text = 'Content:'
-            last_text = "\n Instruction: Please transform this content  to a concise summary that captures the main ideas and presents them in a clear and understandable manner. Ensure that the summary is free from jargon and is suitable for a general audience."
-        return start_text, last_text
-
 # App Titel
 st.set_page_config(
     page_title="PDF Chatbot",
@@ -163,9 +125,10 @@ with st.sidebar:
         llm = 'gpt-4-32k'
     
     if "Llama" in selected_model:
-        temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
-        top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
-        max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=4096, step=8)
+        if st.button('adjust model parameters'):
+            temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
+            top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+            max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=4096, step=8)
 
     
 
@@ -176,7 +139,7 @@ with st.sidebar:
         text = extract_text_with_fallback()
         st.write("File uploaded successfully!")
 
-        start_text, last_text = dropdown_complexity()
+        start_text, last_text = dropdown_complexity(llm)
     
         if st.button('Execute'):
             prompt = start_text+' '+text+last_text
@@ -193,15 +156,15 @@ with st.sidebar:
         url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
         if url_pattern.fullmatch(web_input):
             web_text = website(web_input)
-            complex_text = dropdown_complexity()
-            if st.button('Zusammenfassen'):
-                prompt = web_text+complex_text
+            start_text, last_text = dropdown_complexity(llm)
+            if st.button('Execute'):
+                prompt = start_text+' '+text+last_text
                 st.session_state.messages.append({"role": "user", "content": prompt})
             
-            if st.button('Text Anzeigen'):
+            if st.button('Show text'):
                 st.write(web_text)
         else:
-            st.write('Bitte valide Internetadresse eingeben!')
+            st.write('Please enter a valid internet address!')
 
 #API Keys
 openai.api_key = open_api    
