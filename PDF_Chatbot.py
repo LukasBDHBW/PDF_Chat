@@ -12,6 +12,7 @@ import re
 import time
 import tiktoken
 
+
 # Cost Calculator
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     encoding = tiktoken.encoding_for_model(encoding_name)
@@ -79,34 +80,45 @@ def dropdown_complexity():
     if 'gpt-4' in llm:
         compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically'], key='compexity')
         if compexity == 'Economically':
-            complex_text= 'a\n Instruction: Summarize for a economic person'
+            start_text = 'Content:'
+            last_text= 'a\n Instruction: Summarize for a economic person'
         elif compexity == 'Technically':
-            complex_text = '\n Instruction: Summarize in a technical way'
-        return complex_text
+            start_text = 'Content:'
+            last_text = '\n Instruction: Summarize in a technical way'
+        return start_text, last_text
     elif 'gpt-3.5' in llm:
         compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically'], key='compexity')
         if compexity == 'Economically':
-            complex_text= 'a\n Instruction: Summarize for a economic person'
+            start_text = 'Content:'
+            last_text= 'a\n Instruction: Summarize for a economic person'
         elif compexity == 'Technically':
-            complex_text = '\n Instruction: Summarize in a technical way'
-        return complex_text
+            start_text = 'Content:'
+            last_text = '\n Instruction: Summarize in a technical way'
+        return start_text, last_text
     else:
         compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically', 'Summarized Llama', 'Information page Llama','Bullet points Llama'], key='compexity')
         if compexity == 'Economically':
-            complex_text= 'a\n Instruction: Summarize for a economic person'
+            start_text = 'Content:'
+            last_text= 'a\n Instruction: Summarize for a economic person'
         elif compexity == 'Technically':
-            complex_text = '\n Instruction: Summarize in a technical way'
+            start_text = 'Content:'
+            last_text = '\n Instruction: Summarize in a technical way'
         elif compexity == 'Bullet points Llama':
-            complex_text = '\n Instruction: Please transform this content distill the essential ideas into brief bullet points. Prioritize clarity and conciseness, omitting extras.'
+            start_text = 'Content:'
+            last_text = '\n Instruction: Please transform this content distill the essential ideas into brief bullet points. Prioritize clarity and conciseness, omitting extras.'
         elif compexity == 'Information page Llama':
-            complex_text = '\n Instruction: Please transform this content into a concise summerized information sheet to provide my colleagues with key information about the topic. Ensure the information is accurate and reliable by performing additional checks or validations with the content itself. Structure the information in clear sections and include headings for each topic. Answer long and detailed. And don\'t stop the output until you\'re finished with the information sheet.'
+            start_text = 'Content:'
+            last_text = '\n Instruction: Please transform this content into a concise summerized information sheet to provide my colleagues with key information about the topic. Ensure the information is accurate and reliable by performing additional checks or validations with the content itself. Structure the information in clear sections and include headings for each topic. Answer long and detailed. And don\'t stop the output until you\'re finished with the information sheet.'
         elif compexity == 'Summarized Llama':
-            complex_text = "\n Instruction: Please transform this content  to a concise summary that captures the main ideas and presents them in a clear and understandable manner. Ensure that the summary is free from jargon and is suitable for a general audience."
-        return complex_text
+            start_text = 'Content:'
+            last_text = "\n Instruction: Please transform this content  to a concise summary that captures the main ideas and presents them in a clear and understandable manner. Ensure that the summary is free from jargon and is suitable for a general audience."
+        return start_text, last_text
 
 # App Titel
-st.set_page_config(page_title="📁💬 PDF Chatbot")
-
+st.set_page_config(
+    page_title="PDF Chatbot",
+    page_icon="./Data/Logo_trans.png",
+)
 
 
 # API Token
@@ -164,10 +176,10 @@ with st.sidebar:
         text = extract_text_with_fallback()
         st.write("File uploaded successfully!")
 
-        complex_text = dropdown_complexity()
+        start_text, last_text = dropdown_complexity()
     
         if st.button('Execute'):
-            prompt = text+complex_text
+            prompt = start_text+' '+text+last_text
             st.session_state.messages.append({"role": "user", "content": prompt})
         
         if st.button('Show text'):
@@ -223,6 +235,7 @@ def generate_gpt_response():
     start_messages={"role": "system", "content": "You are a helpful assistant."}
     if start_messages not in st.session_state.messages:
         st.session_state.messages.insert(0, start_messages)
+    print(st.session_state.messages)
     start_time = time.time()
     response = openai.ChatCompletion.create(
     model=llm,
