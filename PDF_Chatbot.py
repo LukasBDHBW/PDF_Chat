@@ -22,7 +22,6 @@ def cost_calculator(elapsed_times,res):
     if 'gpt' in llm:
         input = ''.join(f"{key}{value}" for d in st.session_state.messages for key, value in d.items())
         anzahl_input = num_tokens_from_string(input, llm)
-        print(anzahl_input)
         output = res["choices"][0]["message"]["content"]
         anzahl_output = num_tokens_from_string(output, llm)
         if llm == 'gpt-4':
@@ -77,18 +76,33 @@ def website(site):
     return extracted_text
 
 def dropdown_complexity():
-    compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically', 'Summarized Llama', 'Information page Llama','Bullet points Llama'], key='compexity')
-    if compexity == 'Economically':
-        complex_text= 'a\n Instruction: Summarize for a economic person'
-    elif compexity == 'Technically':
-        complex_text = '\n Instruction: Summarize in a technical way'
-    elif compexity == 'Bullet points Llama':
-        complex_text = '\n Instruction: Please transform this content distill the essential ideas into brief bullet points. Prioritize clarity and conciseness, omitting extras.'
-    elif compexity == 'Information page Llama':
-        complex_text = '\n Instruction: Please transform this content into a concise summerized information sheet to provide my colleagues with key information about the topic. Ensure the information is accurate and reliable by performing additional checks or validations with the content itself. Structure the information in clear sections and include headings for each topic. Answer long and detailed. And don\'t stop the output until you\'re finished with the information sheet.'
-    elif compexity == 'Summarized Llama':
-        complex_text = "\n Instruction: Please transform this content  to a concise summary that captures the main ideas and presents them in a clear and understandable manner. Ensure that the summary is free from jargon and is suitable for a general audience."
-    return complex_text
+    if 'gpt-4' in llm:
+        compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically'], key='compexity')
+        if compexity == 'Economically':
+            complex_text= 'a\n Instruction: Summarize for a economic person'
+        elif compexity == 'Technically':
+            complex_text = '\n Instruction: Summarize in a technical way'
+        return complex_text
+    elif 'gpt-3.5' in llm:
+        compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically'], key='compexity')
+        if compexity == 'Economically':
+            complex_text= 'a\n Instruction: Summarize for a economic person'
+        elif compexity == 'Technically':
+            complex_text = '\n Instruction: Summarize in a technical way'
+        return complex_text
+    else:
+        compexity = st.sidebar.selectbox('Extraction features', ['Economically', 'Technically', 'Summarized Llama', 'Information page Llama','Bullet points Llama'], key='compexity')
+        if compexity == 'Economically':
+            complex_text= 'a\n Instruction: Summarize for a economic person'
+        elif compexity == 'Technically':
+            complex_text = '\n Instruction: Summarize in a technical way'
+        elif compexity == 'Bullet points Llama':
+            complex_text = '\n Instruction: Please transform this content distill the essential ideas into brief bullet points. Prioritize clarity and conciseness, omitting extras.'
+        elif compexity == 'Information page Llama':
+            complex_text = '\n Instruction: Please transform this content into a concise summerized information sheet to provide my colleagues with key information about the topic. Ensure the information is accurate and reliable by performing additional checks or validations with the content itself. Structure the information in clear sections and include headings for each topic. Answer long and detailed. And don\'t stop the output until you\'re finished with the information sheet.'
+        elif compexity == 'Summarized Llama':
+            complex_text = "\n Instruction: Please transform this content  to a concise summary that captures the main ideas and presents them in a clear and understandable manner. Ensure that the summary is free from jargon and is suitable for a general audience."
+        return complex_text
 
 # App Titel
 st.set_page_config(page_title="📁💬 PDF Chatbot")
