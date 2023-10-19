@@ -198,7 +198,6 @@ def generate_gpt_response():
     start_messages={"role": "system", "content": "You are a helpful assistant."}
     if start_messages not in st.session_state.messages:
         st.session_state.messages.insert(0, start_messages)
-    print(st.session_state.messages)
     start_time = time.time()
     response = openai.ChatCompletion.create(
     model=llm,
