@@ -129,8 +129,10 @@ with st.sidebar:
             temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
             top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
             max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=4096, step=8)
-
-    
+        else:
+            temperature = 0.1
+            top_p = 0.9
+            max_length = 4096
 
     # PDF
     uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
@@ -158,7 +160,7 @@ with st.sidebar:
             web_text = website(web_input)
             start_text, last_text = dropdown_complexity(llm)
             if st.button('Execute'):
-                prompt = start_text+' '+text+last_text
+                prompt = start_text+' '+web_text+last_text
                 st.session_state.messages.append({"role": "user", "content": prompt})
             
             if st.button('Show text'):
