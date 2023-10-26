@@ -13,6 +13,7 @@ import time
 import tiktoken
 from prompts import dropdown_complexity
 from langdetect import detect
+
 print(st.session_state)
 # Chat history
 def clear_chat_history():
@@ -61,6 +62,7 @@ def extract_text_with_fallback():
     
     # If the above fails or does not extract text, then OCR is used (Image AI)
     images = convert_from_bytes(file_bytes)
+    print(images)
     extracted_texts = []
     with st.spinner('Lädt...'):
         for image in images:
@@ -117,7 +119,7 @@ with st.sidebar:
 
     # Model selection
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k'], key='selected_model',on_change=clear_chat_history())
+    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k','Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model',on_change=clear_chat_history())
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
@@ -134,22 +136,24 @@ with st.sidebar:
         llm = 'gpt-4-32k'
     
     if "Llama" in selected_model:
-        temperature = 0.1
-        top_p = 0.9
-        max_length = 4096
-        #if st.button('adjust model parameters'):
-            #temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
-            #top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
-            #max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=4096, step=8)
+        temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
+        top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+        max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=4096, step=8)
 
 
     # PDF
     uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+    print(uploaded_file)
+    
+    if uploaded_file != None:
+        if "text" not in st.session_state.keys():
+            text, lang = extract_text_with_fallback()
+            st.session_state.text = text
+        else:
+            lang = lang = detect(st.session_state.text)
 
-    if uploaded_file:
-        text, lang = extract_text_with_fallback()
-        st.session_state.text = text
-        anzahl_input = num_tokens_from_string(text, "gpt-4")
+        # number of Tokens in the provided text
+        anzahl_input = num_tokens_from_string(st.session_state.text, "gpt-4")
         st.write(f"File uploaded successfully!({anzahl_input} Token)")
 
         start_text, last_text = dropdown_complexity(llm,lang)
@@ -160,7 +164,11 @@ with st.sidebar:
         
         if st.button('Show text'):
             st.write(st.session_state.text)
-        
+    else:
+        # for the funktion to delete Old PDFs from session.state
+        if "text" in st.session_state:
+            del st.session_state["text"]
+
         
     
     # Website
@@ -171,14 +179,16 @@ with st.sidebar:
         url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
         if url_pattern.fullmatch(web_input):
             web_text, lang = website(web_input)
-            st.session_state.text = web_text
+            anzahl_input = num_tokens_from_string(web_text, "gpt-4")
+            st.write(f"File uploaded successfully!({anzahl_input} Token)")
+
             start_text, last_text = dropdown_complexity(llm,lang)
             if st.button('Execute',key="web_button"):
-                prompt = start_text+' '+st.session_state.text+last_text
+                prompt = start_text+' '+web_text+last_text
                 st.session_state.messages.append({"role": "user", "content": prompt})
             
             if st.button('Show text',key="web_button_show"):
-                st.write(st.session_state.text)
+                st.write(web_text)
         else:
             st.write('Please enter a valid internet address!')
 
