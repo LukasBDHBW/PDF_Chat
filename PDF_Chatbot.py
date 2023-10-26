@@ -13,7 +13,7 @@ import time
 import tiktoken
 from prompts import dropdown_complexity
 from langdetect import detect
-
+print(st.session_state)
 # Chat history
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
@@ -148,17 +148,18 @@ with st.sidebar:
 
     if uploaded_file:
         text, lang = extract_text_with_fallback()
+        st.session_state.text = text
         anzahl_input = num_tokens_from_string(text, "gpt-4")
         st.write(f"File uploaded successfully!({anzahl_input} Token)")
 
         start_text, last_text = dropdown_complexity(llm,lang)
     
         if st.button('Execute'):
-            prompt = start_text+' '+text+last_text
+            prompt = start_text+' '+st.session_state.text+last_text
             st.session_state.messages.append({"role": "user", "content": prompt})
         
         if st.button('Show text'):
-            st.write(text)
+            st.write(st.session_state.text)
         
         
     
@@ -170,14 +171,14 @@ with st.sidebar:
         url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
         if url_pattern.fullmatch(web_input):
             web_text, lang = website(web_input)
-
+            st.session_state.text = web_text
             start_text, last_text = dropdown_complexity(llm,lang)
-            if st.button('Execute'):
-                prompt = start_text+' '+web_text+last_text
+            if st.button('Execute',key="web_button"):
+                prompt = start_text+' '+st.session_state.text+last_text
                 st.session_state.messages.append({"role": "user", "content": prompt})
             
-            if st.button('Show text'):
-                st.write(web_text)
+            if st.button('Show text',key="web_button_show"):
+                st.write(st.session_state.text)
         else:
             st.write('Please enter a valid internet address!')
 
