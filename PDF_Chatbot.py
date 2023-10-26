@@ -12,6 +12,11 @@ import re
 import time
 import tiktoken
 from prompts import dropdown_complexity
+from langdetect import detect
+
+# Chat history
+def clear_chat_history():
+    st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
 
 # Cost Calculator
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
@@ -49,7 +54,8 @@ def extract_text_with_fallback():
         pdf_data = BytesIO(file_bytes)
         text = extract_text(pdf_data)
         if text.strip():
-            return text
+            lang = detect(text)
+            return text,lang
     except:
         pass
     
@@ -60,7 +66,9 @@ def extract_text_with_fallback():
         for image in images:
             extracted_text = pytesseract.image_to_string(image)
             extracted_texts.append(extracted_text)
-    return " ".join(extracted_texts)
+    text = " ".join(extracted_texts)
+    lang = detect(text)
+    return text,lang
 
 #Webscraper Code
 def website(site):
@@ -74,7 +82,8 @@ def website(site):
 
     for p in paragraphs:
         extracted_text += p.text + "\n"
-    return extracted_text
+    lang = detect(extracted_text)
+    return extracted_text,lang
 
 # App Titel
 st.set_page_config(
@@ -108,7 +117,7 @@ with st.sidebar:
 
     # Model selection
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k'], key='selected_model')
+    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k'], key='selected_model',on_change=clear_chat_history())
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
@@ -133,15 +142,16 @@ with st.sidebar:
             #top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
             #max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=4096, step=8)
 
+
     # PDF
     uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
 
     if uploaded_file:
-        text = extract_text_with_fallback()
+        text, lang = extract_text_with_fallback()
         anzahl_input = num_tokens_from_string(text, "gpt-4")
         st.write(f"File uploaded successfully!({anzahl_input} Token)")
 
-        start_text, last_text = dropdown_complexity(llm)
+        start_text, last_text = dropdown_complexity(llm,lang)
     
         if st.button('Execute'):
             prompt = start_text+' '+text+last_text
@@ -159,8 +169,9 @@ with st.sidebar:
     if web_input:
         url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
         if url_pattern.fullmatch(web_input):
-            web_text = website(web_input)
-            start_text, last_text = dropdown_complexity(llm)
+            web_text, lang = website(web_input)
+
+            start_text, last_text = dropdown_complexity(llm,lang)
             if st.button('Execute'):
                 prompt = start_text+' '+web_text+last_text
                 st.session_state.messages.append({"role": "user", "content": prompt})
@@ -169,6 +180,9 @@ with st.sidebar:
                 st.write(web_text)
         else:
             st.write('Please enter a valid internet address!')
+
+#Button Clear Chat
+st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 #API Keys
 openai.api_key = open_api    
@@ -223,9 +237,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-def clear_chat_history():
-    st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
-st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
+
 
 
 

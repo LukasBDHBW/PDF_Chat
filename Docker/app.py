@@ -11,51 +11,49 @@ from bs4 import BeautifulSoup
 import re
 import time
 import tiktoken
+from prompts import dropdown_complexity
 
-# Kostenrechner
+# Cost Calculator
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     encoding = tiktoken.encoding_for_model(encoding_name)
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
-def kostenrechner(elapsed_times,res):
+def cost_calculator(elapsed_times,res):
     if 'gpt' in llm:
         input = ''.join(f"{key}{value}" for d in st.session_state.messages for key, value in d.items())
         anzahl_input = num_tokens_from_string(input, llm)
-        print(anzahl_input)
         output = res["choices"][0]["message"]["content"]
         anzahl_output = num_tokens_from_string(output, llm)
         if llm == 'gpt-4':
-            kosten = ((0.03/1000)*anzahl_input)+((0.06/1000)*anzahl_output)
+            cost = ((0.03/1000)*anzahl_input)+((0.06/1000)*anzahl_output)
         elif llm == 'gpt-3.5-turbo':
-            kosten = ((0.0015/1000)*anzahl_input)+((0.002/1000)*anzahl_output)
+            cost = ((0.0015/1000)*anzahl_input)+((0.002/1000)*anzahl_output)
         elif llm == 'gpt-3.5-turbo-16k':
-            kosten = ((0.003/1000)*anzahl_input)+((0.004/1000)*anzahl_output)
+            cost = ((0.003/1000)*anzahl_input)+((0.004/1000)*anzahl_output)
         else:
-            kosten = ((0.06/1000)*anzahl_input)+((0.12/1000)*anzahl_output)
+            cost = ((0.06/1000)*anzahl_input)+((0.12/1000)*anzahl_output)
     else:
         if llm == 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea':        
-            kosten = elapsed_times*(0.000725)
+            cost = elapsed_times*(0.000725)
         elif llm == 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5':        
-            kosten = elapsed_times*(0.000725)
+            cost = elapsed_times*(0.000725)
         else:        
-            kosten = elapsed_times*(0.001400)
-    return kosten
+            cost = elapsed_times*(0.001400)
+    return cost
 
 #PDF Reader Code:
 def extract_text_with_fallback():
     file_bytes = uploaded_file.read()
-    # Versuchen Sie zuerst, Text mit PDFMiner zu extrahieren
     try:
-        # Erstellen Sie ein BytesIO-Objekt aus Ihren PDF-Bytes
         pdf_data = BytesIO(file_bytes)
         text = extract_text(pdf_data)
-        if text.strip():  # Wenn der extrahierte Text nicht leer ist
+        if text.strip():
             return text
     except:
         pass
     
-    # Wenn das obige fehlschlägt oder keinen Text extrahiert, dann wird OCR geutzt (Bild KI)
+    # If the above fails or does not extract text, then OCR is used (Image AI)
     images = convert_from_bytes(file_bytes)
     extracted_texts = []
     with st.spinner('Lädt...'):
@@ -78,23 +76,11 @@ def website(site):
         extracted_text += p.text + "\n"
     return extracted_text
 
-def dropdown_complexity():
-    compexity = st.sidebar.selectbox('Zusammenfassung Komplexität', ['Wirtschaftlich', 'Technisch', 'Stark zusammengefasst', 'Confluence','Stichpunkte'], key='compexity')
-    if compexity == 'Wirtschaftlich':
-        complex_text= 'a\n Summerize for a economic person'
-    elif compexity == 'Technisch':
-        complex_text = '\n Summerize in a technical way'
-    elif compexity == 'Stichpunkte':
-        complex_text = '\n Fasse alles kurz auf deutsch in Stichpunkten zusammen!'
-    elif compexity == 'Confluence':
-        complex_text = '\n Fasse alles kurz auf deutsch für ein gut strukturiertes Informationsblatt zusammen!'
-    else:
-        complex_text = "\n Fasse alles kurz in deutscher Sprache zusammen!"
-    return complex_text
-
 # App Titel
-st.set_page_config(page_title="📁💬 PDF Chatbot")
-
+st.set_page_config(
+    page_title="PDF Chatbot",
+    page_icon='./Logo_trans.png',
+)
 
 
 # API Token
@@ -120,7 +106,7 @@ with st.sidebar:
             st.success('Proceed to entering your prompt message!', icon='👉')
 
 
-    # Modellauswahl
+    # Model selection
     st.subheader('Models and parameters')
     selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B','GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k'], key='selected_model')
     if selected_model == 'Llama2-7B':
@@ -139,51 +125,56 @@ with st.sidebar:
         llm = 'gpt-4-32k'
     
     if "Llama" in selected_model:
-        temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
-        top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
-        max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
-
-    
+        temperature = 0.1
+        top_p = 0.9
+        max_length = 4096
+        #if st.button('adjust model parameters'):
+            #temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
+            #top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+            #max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=4096, step=8)
 
     # PDF
     uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
 
     if uploaded_file:
         text = extract_text_with_fallback()
-        st.write("File uploaded successfully!")
+        anzahl_input = num_tokens_from_string(text, "gpt-4")
+        st.write(f"File uploaded successfully!({anzahl_input} Token)")
 
-        complex_text = dropdown_complexity()
+        start_text, last_text = dropdown_complexity(llm)
     
-        if st.button('Zusammenfassen'):
-            prompt = text+complex_text
+        if st.button('Execute'):
+            prompt = start_text+' '+text+last_text
             st.session_state.messages.append({"role": "user", "content": prompt})
         
-        if st.button('Text Anzeigen'):
+        if st.button('Show text'):
             st.write(text)
+        
+        
     
     # Website
-    web_input = st.text_input('Geben Sie hier eine Webseite ein:', '')
+    web_input = st.text_input('Enter a website here:', '')
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
     if web_input:
         url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
         if url_pattern.fullmatch(web_input):
             web_text = website(web_input)
-            complex_text = dropdown_complexity()
-            if st.button('Zusammenfassen'):
-                prompt = web_text+complex_text
+            start_text, last_text = dropdown_complexity(llm)
+            if st.button('Execute'):
+                prompt = start_text+' '+web_text+last_text
                 st.session_state.messages.append({"role": "user", "content": prompt})
             
-            if st.button('Text Anzeigen'):
+            if st.button('Show text'):
                 st.write(web_text)
         else:
-            st.write('Bitte valide Internetadresse eingeben!')
+            st.write('Please enter a valid internet address!')
 
 #API Keys
 openai.api_key = open_api    
 os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
-# Funktion für LLaMA2-Antwort
+# Function for LLaMA2 response
 def generate_llama2_response(prompt_input):
     string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
     for dict_message in st.session_state.messages:
@@ -195,15 +186,18 @@ def generate_llama2_response(prompt_input):
     output = replicate.run(llm, 
                            input={"prompt": f"{string_dialogue} {prompt_input} Assistant: ",
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
+    full_response = ''
+    for item in output:
+        full_response += item
     end_time = time.time()
     elapsed_time = end_time - start_time
-    #hier wir um Kosten kalkulieren zu können ein leerer String in die Kostenfunktion mitgegeben , da die Kosten nur von der Ausführungszeit abhängen
-    kosten = kostenrechner(elapsed_time,"")
+    #Here we enter an empty string into the cost function in order to be able to calculate costs, since the costs only depend on the execution time
+    cost = cost_calculator(elapsed_time,"")
     with st.sidebar:
-        st.markdown(f"<b>Ausführungszeit {llm}:</b> {elapsed_time}s<br><b>Kosten</b>:<br>${kosten}", unsafe_allow_html=True)
-    return output
+        st.markdown(f"<b>Execution time {llm}:</b> {elapsed_time}s<br><b>Cost</b>:<br>${cost}", unsafe_allow_html=True)
+    return full_response
 
-# Funktion für GPT-Antwort
+# GPT response function
 def generate_gpt_response():
     start_messages={"role": "system", "content": "You are a helpful assistant."}
     if start_messages not in st.session_state.messages:
@@ -214,17 +208,17 @@ def generate_gpt_response():
     messages=st.session_state.messages)
     end_time = time.time()
     elapsed_time = end_time - start_time
-    kosten = kostenrechner(elapsed_time, response)
+    cost = cost_calculator(elapsed_time, response)
     with st.sidebar:
-        st.markdown(f"<b>Ausführungszeit {llm}:</b> {elapsed_time}s<br><b>Kosten</b>:<br>${kosten}", unsafe_allow_html=True)
+        st.markdown(f"<b>Execution time {llm}:</b> {elapsed_time}s<br><b>Cost</b>:<br>${cost}", unsafe_allow_html=True)
     return response["choices"][0]["message"]["content"]
 
 
-# Speichern der LLM-generierten Antworten
+# Saving the LLM-generated answers
 if "messages" not in st.session_state.keys():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
 
-# Chatnachrichten anzeigen oder löschen
+# View or delete chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
@@ -235,7 +229,7 @@ st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 
 
-# Benutzer prompt
+# User prompt
 if prompt := st.chat_input(disabled=not replicate_api):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -243,8 +237,8 @@ if prompt := st.chat_input(disabled=not replicate_api):
 
 
 
-# Generieren einer neue Antwort, wenn die letzte Nachricht nicht vom Assistenten stammt
-if st.session_state.messages[-1]["role"] != "assistant":#hier system eintragen falls gpt
+# Generate a new reply if the last message was not from the assistant
+if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             if "Llama" not in selected_model:
@@ -252,10 +246,6 @@ if st.session_state.messages[-1]["role"] != "assistant":#hier system eintragen f
             else:
                 response = generate_llama2_response(prompt)                
             placeholder = st.empty()
-            full_response = ''
-            for item in response:
-                full_response += item
-                placeholder.markdown(full_response)
-            placeholder.markdown(full_response)
-    message = {"role": "assistant", "content": full_response}
+            placeholder.markdown(response)
+    message = {"role": "assistant", "content": response}
     st.session_state.messages.append(message)
