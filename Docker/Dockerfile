@@ -8,6 +8,8 @@ COPY . ./
 EXPOSE 8080
 
 RUN pip install -r requirements.txt
+RUN pip install --upgrade openai
+
 
 #Install tesseract & ocrmypdf
 RUN apt-get update -qqy && apt-get install -qqy \

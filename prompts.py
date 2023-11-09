@@ -60,7 +60,7 @@ def dropdown_complexity(llm,lang):
                 last_text = "\n Instruction: Please transform this content  to a concise summary that captures the main ideas and presents them in a clear and understandable manner. Ensure that the summary is free from jargon and is suitable for a general audience."
     else:
         if 'gpt-4' in llm:
-            compexity_de = st.sidebar.selectbox('Extraktionsfunktionen', ['Informationsseite','Zusammengefasst','Stichpunkte','Wirtschaftlich', 'Technisch','Karteikarten'], key='compexity_de')
+            compexity_de = st.sidebar.selectbox('Extraktionsfunktionen', ['Informationsseite','Zusammengefasst','Stichpunkte','Wirtschaftlich', 'Technisch','Karteikarten','Arbeiten Korrektur'], key='compexity_de')
             if compexity_de == 'Wirtschaftlich':
                 start_text = 'Inhalt:'
                 last_text= '\n Anleitung: Fasse den text für eine Wirtschaftsperson zusammen.'
@@ -79,6 +79,10 @@ def dropdown_complexity(llm,lang):
             elif compexity_de == 'Karteikarten':
                 start_text = 'Inhalt:'
                 last_text = '\n Unterweisung: Der obige Inhalt ist eine Vorlesung. Könnten Sie bitte einige Fragen und Antworten strukturieren, die auf dem Dokument basieren, das ich mit Karteikarten lernen kann. Achten Sie bitte darauf, dass die Kernaussagen der gesamten Vorlesung in diesen Fragen abgefragt werden, damit ich ein gutes Verständnis für das Thema bekomme. Bitte überprüfen Sie anhand Ihrer Kenntnisse, ob Ihre Antworten richtig sind.'
+            elif compexity_de == 'Arbeiten Korrektur':
+                start_text = 'Inhalt:'
+                last_text = 'Anweisung: Bitte überprüfe den oben genannten inhalt auf inhaltliche Fehler, Rechtschreibfehler und Grammatikfehler und gebe mir falls du etwas Findest die jeweilige Seite mit dem kurzen Textausschnitt an. Höre bitte nicht nach dem ersten Fehler mit der Auswertung auf, mache solange bis du den gfanzen Text korrigiert hast.'
+        
         elif 'gpt-3.5' in llm:
             compexity_de = st.sidebar.selectbox('Extraktionsfunktionen', ['Informationsseite','Zusammengefasst','Stichpunkte','Wirtschaftlich', 'Technisch','Karteikarten'], key='compexity_de')
             if compexity_de == 'Wirtschaftlich':

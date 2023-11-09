@@ -116,10 +116,10 @@ with st.sidebar:
         else:
             st.success('Proceed to entering your prompt message!', icon='👉')
 
-
+#,on_change=clear_chat_history()
     # Model selection
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k','Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model',on_change=clear_chat_history())
+    selected_model = st.sidebar.selectbox('Choose a Chatbot model', ['GPT-3.5 Turbo - 4k', 'GPT-3.5 Turbo - 16k','GPT 4 - 8k','GPT 4 - 32k','Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model')
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
@@ -154,7 +154,15 @@ with st.sidebar:
 
         # number of Tokens in the provided text
         anzahl_input = num_tokens_from_string(st.session_state.text, "gpt-4")
-        st.write(f"File uploaded successfully!({anzahl_input} Token)")
+        st.markdown(f"File uploaded successfully!({anzahl_input} Token)")
+        
+        if anzahl_input > 14000 and (llm == "gpt-3.5-turbo" or "Llama" in llm or llm == "gpt-3.5-turbo-16k" or llm == "gpt-4"):
+            st.markdown("<span style='color:red; font-weight:bold;'>The text is too long for the model, please use another model like:<br>GPT 4 - 32k</span>", unsafe_allow_html=True)
+        elif anzahl_input > 6000 and (llm == "gpt-3.5-turbo" or "Llama" in llm or llm == "gpt-4"):
+            st.markdown("<span style='color:red; font-weight:bold;'>The text is too long for the model, please use another model like:<br>GPT-3.5 Turbo - 16k<br>GPT 4 - 32k</span>", unsafe_allow_html=True)
+        elif anzahl_input > 3000 and (llm == "gpt-3.5-turbo" or "Llama" in llm):
+            st.markdown("<span style='color:red; font-weight:bold;'>The text is too long for the model, please use another model like:<br>GPT-3.5 Turbo - 16k<br>GPT 4 - 8k<br>GPT 4 - 32k</span>", unsafe_allow_html=True)
+            
 
         start_text, last_text = dropdown_complexity(llm,lang)
     
